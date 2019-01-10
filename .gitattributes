@@ -3,3 +3,4 @@ Basic-Model_IBM/data/grammar_data.txt filter=lfs diff=lfs merge=lfs -text
 Basic-Model_IBM/data/grammar_data_train.txt filter=lfs diff=lfs merge=lfs -text
 Basic-Model_IBM/data/grammar_data_test.txt filter=lfs diff=lfs merge=lfs -text
 Plus_Model/data/grammar_data.txt filter=lfs diff=lfs merge=lfs -text
+Plus_Model/data/grammar_data2.txt filter=lfs diff=lfs merge=lfs -text
