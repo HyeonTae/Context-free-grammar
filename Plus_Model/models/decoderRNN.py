@@ -1,3 +1,5 @@
+import os
+import sys
 import random
 
 import numpy as np
@@ -7,13 +9,15 @@ import torch.nn as nn
 from torch.autograd import Variable
 import torch.nn.functional as F
 
-from .attention import Attention
-from .baseRNN import BaseRNN
+sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
+
+from models.attention import Attention
+from models.baseRNN import BaseRNN
 
 if torch.cuda.is_available():
     import torch.cuda as device
 else:
-import torch as device
+    import torch as device
 
 class DecoderRNN(BaseRNN):
     KEY_ATTN_SCORE = 'attention_score'
@@ -22,7 +26,7 @@ class DecoderRNN(BaseRNN):
 
     def __init__(self, vocab_size, max_len, hidden_size,
             sos_id, eos_id,
-            n_layers=1, rnn_cell='gru', bidirectional=False,
+            n_layers=1, rnn_cell='lstm', bidirectional=False,
             input_dropout_p=0, dropout_p=0, use_attention=False):
         super(DecoderRNN, self).__init__(vocab_size, max_len, hidden_size,
                 input_dropout_p, dropout_p,
@@ -90,8 +94,6 @@ class DecoderRNN(BaseRNN):
                 lengths[update_idx] = len(sequence_symbols)
             return symbols
 
-        # Manual unrolling is used to support random teacher forcing.
-        # If teacher_forcing_ratio is True or False instead of a probability, the unrolling can be done in graph
         if use_teacher_forcing:
             decoder_input = inputs[:, :-1]
             decoder_output, decoder_hidden, attn = self.forward_step(decoder_input, decoder_hidden, encoder_outputs,
@@ -119,7 +121,6 @@ class DecoderRNN(BaseRNN):
         return decoder_outputs, decoder_hidden, ret_dict
 
     def _init_state(self, encoder_hidden):
-        """ Initialize the encoder hidden state. """
         if encoder_hidden is None:
             return None
         if isinstance(encoder_hidden, tuple):
@@ -129,9 +130,6 @@ class DecoderRNN(BaseRNN):
         return encoder_hidden
 
     def _cat_directions(self, h):
-        """ If the encoder is bidirectional, do the following transformation.
-            (#directions * #layers, #batch, hidden_size) -> (#layers, #batch, #directions * hidden_size)
-        """
         if self.bidirectional_encoder:
             h = torch.cat([h[0:h.size(0):2], h[1:h.size(0):2]], 2)
         return h
