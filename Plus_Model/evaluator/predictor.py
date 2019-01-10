@@ -5,14 +5,6 @@ from torch.autograd import Variable
 class Predictor(object):
 
     def __init__(self, model, src_vocab, tgt_vocab):
-        """
-        Predictor class to evaluate for a given model.
-        Args:
-            model (seq2seq.models): trained model. This can be loaded from a checkpoint
-                using `seq2seq.util.checkpoint.load`
-            src_vocab (seq2seq.dataset.vocabulary.Vocabulary): source sequence vocabulary
-            tgt_vocab (seq2seq.dataset.vocabulary.Vocabulary): target sequence vocabulary
-        """
         if torch.cuda.is_available():
             self.model = model.cuda()
         else:
@@ -32,13 +24,6 @@ class Predictor(object):
         return other
 
     def predict(self, src_seq):
-        """ Make prediction given `src_seq` as input.
-        Args:
-            src_seq (list): list of tokens in source language
-        Returns:
-            tgt_seq (list): list of tokens in target language as predicted
-            by the pre-trained model
-        """
         other = self.get_decoder_features(src_seq)
 
         length = other['length'][0]
@@ -48,15 +33,6 @@ class Predictor(object):
         return tgt_seq
 
     def predict_n(self, src_seq, n=1):
-        """ Make 'n' predictions given `src_seq` as input.
-        Args:
-            src_seq (list): list of tokens in source language
-            n (int): number of predicted seqs to return. If None,
-                     it will return just one seq.
-        Returns:
-            tgt_seq (list): list of tokens in target language as predicted
-                            by the pre-trained model
-        """
         other = self.get_decoder_features(src_seq)
 
         result = []

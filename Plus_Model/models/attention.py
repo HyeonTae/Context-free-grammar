@@ -9,11 +9,6 @@ class Attention(nn.Module):
         self.mask = None
 
     def set_mask(self, mask):
-        """
-        Sets indices to be masked
-        Args:
-            mask (torch.Tensor): tensor containing indices to be masked
-        """
         self.mask = mask
 
     def forward(self, output, context):

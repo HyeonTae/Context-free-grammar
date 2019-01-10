@@ -1,12 +1,17 @@
+import os
+import sys
+
 import torch.nn as nn
 
-from .baseRNN import BaseRNN
+sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
+
+from models.baseRNN import BaseRNN
 
 class EncoderRNN(BaseRNN):
 
     def __init__(self, vocab_size, max_len, hidden_size,
                  input_dropout_p=0, dropout_p=0,
-                 n_layers=1, bidirectional=False, rnn_cell='gru', variable_lengths=False,
+                 n_layers=1, bidirectional=False, rnn_cell='lstm', variable_lengths=False,
                  embedding=None, update_embedding=True):
         super(EncoderRNN, self).__init__(vocab_size, max_len, hidden_size,
                 input_dropout_p, dropout_p, n_layers, rnn_cell)
