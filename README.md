@@ -8,3 +8,9 @@ We are trying to reproduce the results of the paper 'Evaluating the Ability of L
     1. Construct a corpus with the same statistics with that used in the paper.
     2. Train a vanilla sequence-to-sequence model to reproduce the behaviour observed in the paper.
     3. Extend the result by trying out different models for machine translation.
+
+## To-do
+ - [ ] Modify the distance function
+ - [ ] Compare performances of various sequence-to-sequence models (vanilla seq2seq, attentional models)
+ - [ ] Generate random strings with non-bracket characters such as a,b, and c.
+ - [ ] Generate random strings with unmatching brackets (e.g. '[[}]', '{]')
