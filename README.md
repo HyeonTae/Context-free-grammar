@@ -15,3 +15,6 @@ We are trying to reproduce the results of the paper 'Evaluating the Ability of L
  - [ ] Compare performances of various sequence-to-sequence attentional models
  - [ ] Generate random strings with non-bracket characters such as a,b, and c.
  - [ ] Generate random strings with unmatching brackets (e.g. '[[}]', '{]')
+ 
+## Memo
+Please check the "train_units_to_error_rate_and_accuracy.ipynb" file.
