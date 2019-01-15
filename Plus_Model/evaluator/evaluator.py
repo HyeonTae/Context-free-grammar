@@ -18,6 +18,10 @@ class Evaluator(object):
         loss.reset()
         match = 0
         total = 0
+        word_total = 0
+        word_match = 0
+        match_w = 0
+        total_w = 0
 
         #device = None if torch.cuda.is_available() else -1
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -43,12 +47,21 @@ class Evaluator(object):
 
                     non_padding = target.ne(pad)
                     correct = seqlist[step].view(-1).eq(target).masked_select(non_padding).sum().item()
-                    match += correct
-                    total += non_padding.sum().item()
+                    match_w += correct
+                    total_w += non_padding.sum().item()
+
+                    if(match_w == total_w):
+                        word_match += 1
+
+                    match += match_w
+                    total += total_w
+                    word_total += 1
 
         if total == 0:
-            accuracy = float('nan')
+            character_accuracy = float('nan')
+            word_accuracy = float('nan')
         else:
-            accuracy = match / total
+            character_accuracy = match / total
+            word_accuracy = word_match / word_total
 
-        return loss.get_loss(), accuracy
+        return loss.get_loss(), character_accuracy, word_accuracy

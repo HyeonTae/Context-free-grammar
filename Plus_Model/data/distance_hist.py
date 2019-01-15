@@ -7,7 +7,7 @@ distance = []
 for pair in pairs:
     depth = []
     count = 0
-    for i in pair[1].split(','):
+    for i in pair[1].split(' '):
         if(int(i) == 0):
             count = count + 1
             depth.append(count)

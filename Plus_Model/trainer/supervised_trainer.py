@@ -124,14 +124,16 @@ class SupervisedTrainer(object):
             epoch_loss_total = 0
             log_msg = "Finished epoch %d: Train %s: %.4f" % (epoch, self.loss.name, epoch_loss_avg)
             if dev_data is not None:
-                dev_loss, accuracy = self.evaluator.evaluate(model, dev_data)
+                dev_loss, character_accuracy, word_accuracy = self.evaluator.evaluate(model, dev_data)
                 self.optimizer.update(dev_loss, epoch)
-                log_msg += ", Dev %s: %.4f, Accuracy: %.4f" % (self.loss.name, dev_loss, accuracy)
+                log_msg += ", Dev %s: %.4f, Accuracy(Character): %.4f, Accuracy(Word): %.4f" % (self.loss.name, dev_loss, character_accuracy, word_accuracy)
                 model.train(mode=True)
             else:
                 self.optimizer.update(epoch_loss_avg, epoch)
 
             log.info(log_msg)
+
+        return epoch_loss_avg, character_accuracy
 
     def train(self, model, data, num_epochs=5,
               resume=False, dev_data=None,
@@ -163,7 +165,7 @@ class SupervisedTrainer(object):
 
         self.logger.info("Optimizer: %s, Scheduler: %s" % (self.optimizer.optimizer, self.optimizer.scheduler))
 
-        self._train_epoches(data, model, num_epochs,
-                            start_epoch, step, dev_data=dev_data,
-                            teacher_forcing_ratio=teacher_forcing_ratio)
-        return model
+        loss, character_accuracy = self._train_epoches(data, model, num_epochs,
+                                    start_epoch, step, dev_data=dev_data,
+                                    teacher_forcing_ratio=teacher_forcing_ratio)
+        return model, loss, character_accuracy

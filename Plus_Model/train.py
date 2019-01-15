@@ -32,7 +32,7 @@ logging.info(opt)
 # Prepare dataset
 src = fields.SourceField()
 tgt = fields.TargetField()
-max_len = 50
+max_len = 100
 def len_filter(example):
     return len(example.src) <= max_len and len(example.tgt) <= max_len
 train = torchtext.data.TabularDataset(
@@ -45,8 +45,8 @@ dev = torchtext.data.TabularDataset(
     fields=[('src', src), ('tgt', tgt)],
     filter_pred=len_filter
 )
-src.build_vocab(train, max_size=50000)
-tgt.build_vocab(train, max_size=50000)
+src.build_vocab(train)
+tgt.build_vocab(train)
 input_vocab = src.vocab
 output_vocab = tgt.vocab
 
@@ -81,7 +81,7 @@ t = SupervisedTrainer(loss=loss, batch_size=32,
                     print_every=100)
 
 seq2seq = t.train(seq2seq, train,
-                num_epochs=6, dev_data=dev,
+                num_epochs=10, dev_data=dev,
                 optimizer=optimizer,
                 teacher_forcing_ratio=0.5)
 

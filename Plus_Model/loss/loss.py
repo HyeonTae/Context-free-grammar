@@ -35,8 +35,9 @@ class Loss(object):
 class NLLLoss(Loss):
     _NAME = "Avg NLLLoss"
 
-    def __init__(self, weight=None, mask=None):
+    def __init__(self, weight=None, mask=None, size_average=True):
         self.mask = mask
+        self.size_average = size_average
         if mask is not None:
             if weight is None:
                 raise ValueError("Must provide weight with a mask.")
@@ -44,14 +45,16 @@ class NLLLoss(Loss):
 
         super(NLLLoss, self).__init__(
             self._NAME,
-            nn.NLLLoss(weight=weight))
+            nn.NLLLoss(weight=weight, size_average=size_average))
 
     def get_loss(self):
         if isinstance(self.acc_loss, int):
             return 0
         # total loss for all batches
         loss = self.acc_loss.data.item()
-        loss /= self.norm_term
+        if self.size_average:
+            # average loss per batch
+            loss /= self.norm_term
         return loss
 
     def eval_batch(self, outputs, target):
@@ -59,11 +62,11 @@ class NLLLoss(Loss):
         self.norm_term += 1
 
 class Perplexity(NLLLoss):
-    _NAME = "Perplexity"
+    _NAME = "Error rate"
     _MAX_EXP = 100
 
     def __init__(self, weight=None, mask=None):
-        super(Perplexity, self).__init__(weight=weight, mask=mask)
+        super(Perplexity, self).__init__(weight=weight, mask=mask, size_average=False)
 
     def eval_batch(self, outputs, target):
         self.acc_loss += self.criterion(outputs, target)
