@@ -17,4 +17,4 @@ We are trying to reproduce the results of the paper 'Evaluating the Ability of L
  - [ ] Generate random strings with unmatching brackets (e.g. '[[}]', '{]')
  
 ## Memo
-Please check the "train_units_to_error_rate_and_accuracy.ipynb" file.
+Please check the "Plus_Model/train_units_to_error_rate_and_accuracy.ipynb" file.
