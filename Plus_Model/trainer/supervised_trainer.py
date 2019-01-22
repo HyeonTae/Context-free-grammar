@@ -3,18 +3,16 @@ import logging
 import os
 import random
 import time
-#import sys
 
 import torch
 import torchtext
 from torch import optim
 
-#sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
-
 from evaluator.evaluator import Evaluator
 from loss.loss import NLLLoss
 from optim.optim import Optimizer
-#from util.checkpoint import Checkpoint
+
+import matplotlib.pyplot as plt
 
 class SupervisedTrainer(object):
     def __init__(self, loss=NLLLoss(), batch_size=64,
@@ -77,7 +75,10 @@ class SupervisedTrainer(object):
 
         step = start_step
         step_elapsed = 0
+        epoch_list = []
+        losses = []
         for epoch in range(start_epoch, n_epochs + 1):
+            epoch_list.append(epoch)
             log.debug("Epoch: %d, Step: %d" % (epoch, step))
 
             batch_generator = batch_iterator.__iter__()
@@ -106,7 +107,8 @@ class SupervisedTrainer(object):
                         step / total_steps * 100,
                         self.loss.name,
                         print_loss_avg)
-                    log.info(log_msg)
+                    # Print learning check
+                    #log.info(log_msg)
 
                 # Checkpoint
                 """
@@ -123,6 +125,7 @@ class SupervisedTrainer(object):
             epoch_loss_avg = epoch_loss_total / min(steps_per_epoch, step - start_step)
             epoch_loss_total = 0
             log_msg = "Finished epoch %d: Train %s: %.4f" % (epoch, self.loss.name, epoch_loss_avg)
+            losses.append(epoch_loss_avg)
             if dev_data is not None:
                 dev_loss, character_accuracy, word_accuracy = self.evaluator.evaluate(model, dev_data)
                 self.optimizer.update(dev_loss, epoch)
@@ -133,6 +136,8 @@ class SupervisedTrainer(object):
 
             log.info(log_msg)
 
+        plt.plot(epoch_list, losses)
+        plt.savefig('epoch_to_loss.png')
         return epoch_loss_avg, character_accuracy
 
     def train(self, model, data, num_epochs=5,
@@ -159,8 +164,8 @@ class SupervisedTrainer(object):
         #else:
         start_epoch = 1
         step = 0
-        if optimizer is None:
-            optimizer = Optimizer(optim.Adam(model.parameters()), max_grad_norm=5)
+        if optimizer is "Adam":
+            optimizer = Optimizer(optim.Adam(model.parameters()), max_grad_norm=0.5)
         self.optimizer = optimizer
 
         self.logger.info("Optimizer: %s, Scheduler: %s" % (self.optimizer.optimizer, self.optimizer.scheduler))

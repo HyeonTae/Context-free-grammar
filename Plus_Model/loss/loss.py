@@ -62,7 +62,7 @@ class NLLLoss(Loss):
         self.norm_term += 1
 
 class Perplexity(NLLLoss):
-    _NAME = "Error rate"
+    _NAME = "loss"
     _MAX_EXP = 100
 
     def __init__(self, weight=None, mask=None):

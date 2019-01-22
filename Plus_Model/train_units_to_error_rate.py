@@ -27,7 +27,8 @@ parser.add_argument('--log-level', dest='log_level',
                     help='Logging level.')
 
 opt = parser.parse_args()
-LOG_FORMAT = '%(asctime)s %(name)-12s %(levelname)-8s %(message)s'
+#LOG_FORMAT = '%(asctime)s %(name)-12s %(levelname)-8s %(message)s'
+LOG_FORMAT = '%(asctime)s %(levelname)-6s %(message)s'
 logging.basicConfig(format=LOG_FORMAT, level=getattr(logging, opt.log_level.upper()))
 logging.info(opt)
 
@@ -60,12 +61,13 @@ if torch.cuda.is_available():
     loss.cuda()
 
 seq2seq = None
-optimizer = None
+optimizer = Optimizer(optim.Adam(model.parameters()), max_grad_norm=0.5)
 
 hidden_sizes = list(range(4, 50, 4))
 print(hidden_sizes)
 error_rate = []
 accuracy = []
+losses = []
 
 # Initialize model
 for i in hidden_sizes:
@@ -94,12 +96,18 @@ for i in hidden_sizes:
                                                     optimizer=optimizer,
                                                     teacher_forcing_ratio=0.5)
 
-    error_rate.append(ave_loss/100)
+    losses.append(ave_loss/100)
+    error_rate.append(1 - character_accuracy)
     accuracy.append(character_accuracy)
 
+plt.plot(hidden_sizes, losses)
+plt.savefig('log/units_to_loss.png')
+plt.clf()
 plt.plot(hidden_sizes, error_rate)
-plt.savefig('units_to_error_rate.png')
+plt.savefig('log/units_to_error_rate.png')
 plt.clf()
 plt.plot(hidden_sizes, accuracy)
-plt.savefig('units_to_accuracy.png')
+plt.savefig('log/units_to_accuracy.png')
+
+# Model save (Hidden units = 50)
 torch.save(seq2seq.state_dict(), 'log/model_save.pth')
