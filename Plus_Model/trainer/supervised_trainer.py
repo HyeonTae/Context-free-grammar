@@ -3,16 +3,29 @@ import logging
 import os
 import random
 import time
+<<<<<<< HEAD
+=======
+#import sys
+>>>>>>> d6b28b16f2d9d234eed996c477a5c4f7a9d53268
 
 import torch
 import torchtext
 from torch import optim
 
+<<<<<<< HEAD
 from evaluator.evaluator import Evaluator
 from loss.loss import NLLLoss
 from optim.optim import Optimizer
 
 import matplotlib.pyplot as plt
+=======
+#sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
+
+from evaluator.evaluator import Evaluator
+from loss.loss import NLLLoss
+from optim.optim import Optimizer
+#from util.checkpoint import Checkpoint
+>>>>>>> d6b28b16f2d9d234eed996c477a5c4f7a9d53268
 
 class SupervisedTrainer(object):
     def __init__(self, loss=NLLLoss(), batch_size=64,
@@ -75,10 +88,14 @@ class SupervisedTrainer(object):
 
         step = start_step
         step_elapsed = 0
+<<<<<<< HEAD
         epoch_list = []
         losses = []
         for epoch in range(start_epoch, n_epochs + 1):
             epoch_list.append(epoch)
+=======
+        for epoch in range(start_epoch, n_epochs + 1):
+>>>>>>> d6b28b16f2d9d234eed996c477a5c4f7a9d53268
             log.debug("Epoch: %d, Step: %d" % (epoch, step))
 
             batch_generator = batch_iterator.__iter__()
@@ -107,8 +124,12 @@ class SupervisedTrainer(object):
                         step / total_steps * 100,
                         self.loss.name,
                         print_loss_avg)
+<<<<<<< HEAD
                     # Print learning check
                     #log.info(log_msg)
+=======
+                    log.info(log_msg)
+>>>>>>> d6b28b16f2d9d234eed996c477a5c4f7a9d53268
 
                 # Checkpoint
                 """
@@ -125,7 +146,10 @@ class SupervisedTrainer(object):
             epoch_loss_avg = epoch_loss_total / min(steps_per_epoch, step - start_step)
             epoch_loss_total = 0
             log_msg = "Finished epoch %d: Train %s: %.4f" % (epoch, self.loss.name, epoch_loss_avg)
+<<<<<<< HEAD
             losses.append(epoch_loss_avg)
+=======
+>>>>>>> d6b28b16f2d9d234eed996c477a5c4f7a9d53268
             if dev_data is not None:
                 dev_loss, character_accuracy, word_accuracy = self.evaluator.evaluate(model, dev_data)
                 self.optimizer.update(dev_loss, epoch)
@@ -136,8 +160,11 @@ class SupervisedTrainer(object):
 
             log.info(log_msg)
 
+<<<<<<< HEAD
         plt.plot(epoch_list, losses)
         plt.savefig('epoch_to_loss.png')
+=======
+>>>>>>> d6b28b16f2d9d234eed996c477a5c4f7a9d53268
         return epoch_loss_avg, character_accuracy
 
     def train(self, model, data, num_epochs=5,
@@ -164,8 +191,13 @@ class SupervisedTrainer(object):
         #else:
         start_epoch = 1
         step = 0
+<<<<<<< HEAD
         if optimizer is "Adam":
             optimizer = Optimizer(optim.Adam(model.parameters()), max_grad_norm=0.5)
+=======
+        if optimizer is None:
+            optimizer = Optimizer(optim.Adam(model.parameters()), max_grad_norm=5)
+>>>>>>> d6b28b16f2d9d234eed996c477a5c4f7a9d53268
         self.optimizer = optimizer
 
         self.logger.info("Optimizer: %s, Scheduler: %s" % (self.optimizer.optimizer, self.optimizer.scheduler))

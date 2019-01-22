@@ -1,10 +1,13 @@
 import os
 import argparse
 import logging
+import sys
 
 import torch
 from torch.optim.lr_scheduler import StepLR
 import torchtext
+
+#sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
 
 from trainer.supervised_trainer import SupervisedTrainer
 from models.encoderRNN import EncoderRNN
@@ -15,31 +18,45 @@ from optim.optim import Optimizer
 from dataset import fields
 from evaluator.predictor import Predictor
 
-import matplotlib.pyplot as plt
+try:
+    raw_input          # Python 2
+except NameError:
+    raw_input = input  # Python 3
+
+# Sample usage:
+#     # training
+#     python examples/sample.py --train_path $TRAIN_PATH --dev_path $DEV_PATH --expt_dir $EXPT_PATH
+#     # resuming from the latest checkpoint of the experiment
+#      python examples/sample.py --train_path $TRAIN_PATH --dev_path $DEV_PATH --expt_dir $EXPT_PATH --resume
+#      # resuming from a specific checkpoint
+#      python examples/sample.py --train_path $TRAIN_PATH --dev_path $DEV_PATH --expt_dir $EXPT_PATH --load_checkpoint $CHECKPOINT_DIR
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--train_path', action='store', dest='train_path',
                     help='Path to train data')
 parser.add_argument('--dev_path', action='store', dest='dev_path',
                     help='Path to dev data')
+parser.add_argument('--expt_dir', action='store', dest='expt_dir', default='./experiment',
+                    help='Path to experiment directory. If load_checkpoint is True, then path to checkpoint directory has to be provided')
+parser.add_argument('--load_checkpoint', action='store', dest='load_checkpoint',
+                    help='The name of the checkpoint to load, usually an encoded time string')
+parser.add_argument('--resume', action='store_true', dest='resume',
+                    default=False,
+                    help='Indicates if training has to be resumed from the latest checkpoint')
 parser.add_argument('--log-level', dest='log_level',
                     default='info',
                     help='Logging level.')
 
 opt = parser.parse_args()
-<<<<<<< HEAD
-#LOG_FORMAT = '%(asctime)s %(name)-12s %(levelname)-8s %(message)s'
-LOG_FORMAT = '%(asctime)s %(levelname)-6s %(message)s'
-=======
+
 LOG_FORMAT = '%(asctime)s %(name)-12s %(levelname)-8s %(message)s'
->>>>>>> d6b28b16f2d9d234eed996c477a5c4f7a9d53268
 logging.basicConfig(format=LOG_FORMAT, level=getattr(logging, opt.log_level.upper()))
 logging.info(opt)
 
 # Prepare dataset
 src = fields.SourceField()
 tgt = fields.TargetField()
-max_len = 100
+max_len = 50
 def len_filter(example):
     return len(example.src) <= max_len and len(example.tgt) <= max_len
 train = torchtext.data.TabularDataset(
@@ -52,10 +69,16 @@ dev = torchtext.data.TabularDataset(
     fields=[('src', src), ('tgt', tgt)],
     filter_pred=len_filter
 )
-src.build_vocab(train)
-tgt.build_vocab(train)
+src.build_vocab(train, max_size=50000)
+tgt.build_vocab(train, max_size=50000)
 input_vocab = src.vocab
 output_vocab = tgt.vocab
+
+# NOTE: If the source field name and the target field name
+# are different from 'src' and 'tgt' respectively, they have
+# to be set explicitly before any training or inference
+# seq2seq.src_field_name = 'src'
+# seq2seq.tgt_field_name = 'tgt'
 
 # Prepare loss
 weight = torch.ones(len(tgt.vocab))
@@ -65,25 +88,10 @@ if torch.cuda.is_available():
     loss.cuda()
 
 seq2seq = None
-<<<<<<< HEAD
-optimizer = Optimizer(optim.Adam(model.parameters()), max_grad_norm=0.5)
-=======
 optimizer = None
->>>>>>> d6b28b16f2d9d234eed996c477a5c4f7a9d53268
-
-hidden_sizes = list(range(4, 50, 4))
-print(hidden_sizes)
-error_rate = []
-accuracy = []
-<<<<<<< HEAD
-losses = []
-=======
->>>>>>> d6b28b16f2d9d234eed996c477a5c4f7a9d53268
-
-# Initialize model
-for i in hidden_sizes:
-    print("Hidden size is %d" % i)
-    hidden_size = i
+if not opt.resume:
+    # Initialize model
+    hidden_size=128
     bidirectional = True
     encoder = EncoderRNN(len(src.vocab), max_len, hidden_size,
                         bidirectional=bidirectional, variable_lengths=True)
@@ -97,39 +105,22 @@ for i in hidden_sizes:
     for param in seq2seq.parameters():
         param.data.uniform_(-0.08, 0.08)
 
-    # train
-    t = SupervisedTrainer(loss=loss, batch_size=32,
-                        checkpoint_every=50,
-                        print_every=100)
+    # Optimizer and learning rate scheduler can be customized by
+    # explicitly constructing the objects and pass to the trainer.
+    #
+    # optimizer = Optimizer(torch.optim.Adam(seq2seq.parameters()), max_grad_norm=5)
+    # scheduler = StepLR(optimizer.optimizer, 1)
+    # optimizer.set_scheduler(scheduler)
 
-    seq2seq, ave_loss, character_accuracy = t.train(seq2seq, train,
-                                                    num_epochs=10, dev_data=dev,
-                                                    optimizer=optimizer,
-                                                    teacher_forcing_ratio=0.5)
+# train
 
-<<<<<<< HEAD
-    losses.append(ave_loss/100)
-    error_rate.append(1 - character_accuracy)
-    accuracy.append(character_accuracy)
+#torch.save(seq2seq.state_dict(), 'log/model_save.pth')
 
-plt.plot(hidden_sizes, losses)
-plt.savefig('log/units_to_loss.png')
-plt.clf()
-plt.plot(hidden_sizes, error_rate)
-plt.savefig('log/units_to_error_rate.png')
-plt.clf()
-plt.plot(hidden_sizes, accuracy)
-plt.savefig('log/units_to_accuracy.png')
+seq2seq.load_state_dict(torch.load('log/model_save.pth'))
+seq2seq.eval()
+predictor = Predictor(seq2seq, input_vocab, output_vocab)
 
-# Model save (Hidden units = 50)
-=======
-    error_rate.append(ave_loss/100)
-    accuracy.append(character_accuracy)
-
-plt.plot(hidden_sizes, error_rate)
-plt.savefig('units_to_error_rate.png')
-plt.clf()
-plt.plot(hidden_sizes, accuracy)
-plt.savefig('units_to_accuracy.png')
->>>>>>> d6b28b16f2d9d234eed996c477a5c4f7a9d53268
-torch.save(seq2seq.state_dict(), 'log/model_save.pth')
+while True:
+    seq_str = raw_input("Type in a source sequence:")
+    seq = seq_str.strip().split()
+    print(predictor.predict(seq))

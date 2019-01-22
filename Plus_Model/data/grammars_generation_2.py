@@ -60,7 +60,7 @@ def printProgress (iteration, total, prefix = '', suffix = '', decimals = 1, bar
     if(iteration == total):
         sys.stdout.write('\n')
     sys.stdout.flush()
-
+ 
 def main():
     global rb
     global rc
@@ -69,13 +69,8 @@ def main():
     while(True):
         rb = random.uniform(0.4, 0.8)
         rc = random.uniform(0.4, 0.8)
-<<<<<<< HEAD
         printProgress(len(brackets_list), 100000, 'Progress', 'Complete')
         if(len(brackets_list) >= 100000):
-=======
-        printProgress(len(brackets_list), 1000000, 'Progress', 'Complete')
-        if(len(brackets_list) >= 1000000):
->>>>>>> d6b28b16f2d9d234eed996c477a5c4f7a9d53268
             break
         result = "*S"
         sequence = []
@@ -99,23 +94,19 @@ def main():
                 else:
                     result = result.replace("S", "*S", 1)
 
-        if result not in brackets_list:
-            brackets_list.append(result)
-            #print(len(result))
-            result = result[:len(result) if len(result) <= 100 else 100]
-            for i in result:
-                if(i == "{" or i == "["):
-                    num = num + 1
-                    sequence.append(str(num))
-                elif(i == "}" or i == "]"):
-                    num = num - 1
-                    sequence.append(str(num))
-            f.write("%s\t%s\n" % (" ".join(result), " ".join(sequence)))
+        brackets_list.append(result)
+        result = result[:len(result) if len(result) <= 100 else 100]
+        for i in result:
+            if(i == "{" or i == "["):
+                num = num + 1
+                sequence.append(str(num))
+            elif(i == "}" or i == "]"):
+                num = num - 1
+                sequence.append(str(num))
+        f.write("%s\t%s\n" % (result, ",".join(sequence)))
 
-            #print(result)
-            #print(sequence)
-        else:
-            continue
+        #print(result)
+        #print(sequence)
  
 if __name__ == "__main__":
     main()
