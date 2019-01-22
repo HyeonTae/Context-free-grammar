@@ -10,7 +10,11 @@ We are trying to reproduce the results of the paper 'Evaluating the Ability of L
     3. Extend the result by trying out different models for machine translation.
 
 ## To-do
- - [ ] Modify the distance function
- - [ ] Compare performances of various sequence-to-sequence models (vanilla seq2seq, attentional models)
+ - [X] Modify the distance function
+ - [X] Compare performances of various sequence-to-sequence vanilla seq2seq models
+ - [ ] Compare performances of various sequence-to-sequence attentional models
  - [ ] Generate random strings with non-bracket characters such as a,b, and c.
  - [ ] Generate random strings with unmatching brackets (e.g. '[[}]', '{]')
+ 
+## Memo
+Please check the "Plus_Model/train_units_to_error_rate_and_accuracy.ipynb" file. (written by Hyeontae - 19/01/15)
