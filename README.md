@@ -12,9 +12,10 @@ We are trying to reproduce the results of the paper 'Evaluating the Ability of L
 ## To-do
  - [X] Modify the distance function
  - [X] Compare performances of various sequence-to-sequence vanilla seq2seq models
- - [ ] Compare performances of various sequence-to-sequence attentional models
+ - [X] Compare performances of various sequence-to-sequence attentional models
  - [ ] Generate random strings with non-bracket characters such as a,b, and c.
- - [ ] Generate random strings with unmatching brackets (e.g. '[[}]', '{]')
+ - [X] Generate random strings with unmatching brackets (e.g. '[[}]', '{]')
  
 ## Memo
 Please check the "Plus_Model/train_units_to_error_rate_and_accuracy.ipynb" file. (written by Hyeontae - 19/01/15)
+Unmatching data is not optimized. (written by Hyeontae - 19/02/28)
