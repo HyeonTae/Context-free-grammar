@@ -1,5 +1,0 @@
-grammar_data_shuf.txt filter=lfs diff=lfs merge=lfs -text
-<<<<<<< HEAD
-grammar_data_shuf_1M.txt filter=lfs diff=lfs merge=lfs -text
-=======
->>>>>>> d6b28b16f2d9d234eed996c477a5c4f7a9d53268
