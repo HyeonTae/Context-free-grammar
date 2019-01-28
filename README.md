@@ -17,5 +17,5 @@ We are trying to reproduce the results of the paper 'Evaluating the Ability of L
  - [X] Generate random strings with unmatching brackets (e.g. '[[}]', '{]')
  
 ## Memo
-Please check the "Plus_Model/train_units_to_error_rate_and_accuracy.ipynb" file. (written by Hyeontae - 19/01/15)
-Unmatching data is not optimized. (written by Hyeontae - 19/02/28)
+1. Please check the "Plus_Model/train_units_to_error_rate_and_accuracy.ipynb" file. (written by Hyeontae - 19/01/15)
+2. Unmatching data is not optimized. (written by Hyeontae - 19/02/28)
