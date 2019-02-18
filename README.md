@@ -13,7 +13,7 @@ We are trying to reproduce the results of the paper 'Evaluating the Ability of L
  - [X] Modify the distance function
  - [X] Compare performances of various sequence-to-sequence vanilla seq2seq models
  - [X] Compare performances of various sequence-to-sequence attentional models
- - [ ] Generate random strings with non-bracket characters such as a,b, and c.
+ - [X] Generate random strings with non-bracket characters such as a,b, and c.
  - [X] Generate random strings with unmatching brackets (e.g. '[[}]', '{]')
  
 ## Memo
