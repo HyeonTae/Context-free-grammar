@@ -6,7 +6,7 @@ import torch
 from torch.optim.lr_scheduler import StepLR
 import torchtext
 
-from trainer.supervised_trainer import SupervisedTrainer
+from trainer.supervised_trainer_unmatching import SupervisedTrainer
 from models.encoderRNN import EncoderRNN
 from models.decoderRNN import DecoderRNN
 from models.seq2seq import Seq2seq
@@ -18,8 +18,8 @@ from evaluator.predictor import Predictor
 parser = argparse.ArgumentParser()
 parser.add_argument('--train_path', action='store', dest='train_path',
                     help='Path to train data')
-parser.add_argument('--dev_path', action='store', dest='dev_path',
-                    help='Path to dev data')
+parser.add_argument('--log_path', action='store', dest='log_path',
+                    help='Path to log data')
 parser.add_argument('--log-level', dest='log_level',
                     default='info',
                     help='Logging level.')
@@ -32,7 +32,7 @@ logging.info(opt)
 # Prepare dataset
 src = fields.SourceField()
 tgt = fields.TargetField()
-max_len = 100
+max_len = 102
 def len_filter(example):
     return len(example.src) <= max_len and len(example.tgt) <= max_len
 train = torchtext.data.TabularDataset(
@@ -40,11 +40,7 @@ train = torchtext.data.TabularDataset(
     fields=[('src', src), ('tgt', tgt)],
     filter_pred=len_filter
 )
-dev = torchtext.data.TabularDataset(
-    path=opt.dev_path, format='tsv',
-    fields=[('src', src), ('tgt', tgt)],
-    filter_pred=len_filter
-)
+
 src.build_vocab(train)
 tgt.build_vocab(train)
 input_vocab = src.vocab
@@ -63,10 +59,10 @@ optimizer = None
 # Initialize model
 hidden_size=50
 bidirectional = True
-encoder = EncoderRNN(len(src.vocab), max_len, hidden_size,
+encoder = EncoderRNN(len(src.vocab), max_len, hidden_size, n_layers=1,
                     bidirectional=bidirectional, variable_lengths=True)
 decoder = DecoderRNN(len(tgt.vocab), max_len, hidden_size * 2 if bidirectional else hidden_size,
-                    dropout_p=0.2, use_attention=True, bidirectional=bidirectional,
+                    dropout_p=0.2, use_attention=True, bidirectional=bidirectional, n_layers=1,
                     eos_id=tgt.eos_id, sos_id=tgt.sos_id)
 seq2seq = Seq2seq(encoder, decoder)
 if torch.cuda.is_available():
@@ -75,7 +71,7 @@ if torch.cuda.is_available():
 for param in seq2seq.parameters():
     param.data.uniform_(-0.08, 0.08)
 
-seq2seq.load_state_dict(torch.load('log/unmatching_model_save.pth'))
+seq2seq.load_state_dict(torch.load(opt.log_path))
 seq2seq.eval()
 predictor = Predictor(seq2seq, input_vocab, output_vocab)
 

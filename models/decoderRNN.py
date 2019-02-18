@@ -12,6 +12,7 @@ import torch.nn.functional as F
 sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
 
 from models.attention import Attention
+from models.attention_Bahdanau import Attention_Bahdanau
 from models.baseRNN import BaseRNN
 
 if torch.cuda.is_available():
@@ -27,13 +28,12 @@ class DecoderRNN(BaseRNN):
     def __init__(self, vocab_size, max_len, hidden_size,
             sos_id, eos_id,
             n_layers=1, rnn_cell='lstm', bidirectional=False,
-            input_dropout_p=0, dropout_p=0, use_attention=False):
+            input_dropout_p=0, dropout_p=0, use_attention=None):
         super(DecoderRNN, self).__init__(vocab_size, max_len, hidden_size,
                 input_dropout_p, dropout_p,
                 n_layers, rnn_cell)
 
         self.bidirectional_encoder = bidirectional
-        self.rnn = self.rnn_cell(5, hidden_size, n_layers, batch_first=True, dropout=dropout_p)
 
         self.output_size = vocab_size
         self.max_length = max_len
@@ -44,8 +44,14 @@ class DecoderRNN(BaseRNN):
         self.init_input = None
 
         self.embedding = nn.Embedding(self.output_size, 5)
-        if use_attention:
+        if use_attention is "Luong":
+            self.rnn = self.rnn_cell(5, hidden_size, n_layers, batch_first=True, dropout=dropout_p)
             self.attention = Attention(self.hidden_size)
+        elif use_attention is "Bahdanau":
+            self.rnn = self.rnn_cell(hidden_size + 5, hidden_size, n_layers, batch_first=True, dropout=dropout_p)
+            self.attention = Attention_Bahdanau(self.hidden_size)
+        else:
+            self.rnn = self.rnn_cell(5, hidden_size, n_layers, batch_first=True, dropout=dropout_p)
 
         self.out = nn.Linear(self.hidden_size, self.output_size)
 
@@ -58,17 +64,49 @@ class DecoderRNN(BaseRNN):
         output, hidden = self.rnn(embedded, hidden)
 
         attn = None
-        if self.use_attention:
+        if self.use_attention is "Luong":
             output, attn = self.attention(output, encoder_outputs)
 
         predicted_softmax = function(self.out(output.contiguous().view(-1, self.hidden_size)), dim=1).view(batch_size, output_size, -1)
         return predicted_softmax, hidden, attn
+
+    def forward_step_BahdanauAtt(self, input_var, hidden, encoder_outputs, function):
+        batch_size = input_var.size(0)
+        output_size = input_var.size(1)
+        # embedded = batch_size * out_len * embedded_size
+        embedded = self.embedding(input_var)
+        embedded = self.input_dropout(embedded)
+
+        attn = self.attention(hidden[-1], encoder_outputs)
+
+        input_v = input_var.unsqueeze(2)
+        input_v = input_v.float()
+        # input_v = batch_size * out_len * 1
+        # attn = batch_size * 1 * in_len
+        # attn_v = batch_size * out_len * in_len
+        attn_v = torch.bmm(input_v, attn)
+        #attn = attn.view(batch_size, output_size, -1)
+        # ontext = batch * out_len * (hidden_size*2)
+        context = attn_v.bmm(encoder_outputs)  # (B,s,V)
+        rnn_input = torch.cat((embedded, context), 2)
+
+        output, hidden = self.rnn(rnn_input, hidden)
+
+        predicted_softmax = function(self.out(output.contiguous().view(-1, self.hidden_size)), dim=1).view(batch_size, output_size, -1)
+
+        return predicted_softmax, hidden, attn_v
 
     def forward(self, inputs=None, encoder_hidden=None, encoder_outputs=None,
                     function=F.log_softmax, teacher_forcing_ratio=0):
         ret_dict = dict()
         if self.use_attention:
             ret_dict[DecoderRNN.KEY_ATTN_SCORE] = list()
+
+        # input.shape = batch_size x sequence_length
+        # encoder_outputs.shape = batch_size x sequence_length (50) x hidden_size (50 x 2)
+        # encoder_hidden = tuple of the last hidden state and the last cell state.
+        # Last cell state = number of layers * batch_size * hidden_size
+        # Last hidden state = the same as above
 
         inputs, batch_size, max_length = self._validate_args(inputs, encoder_hidden, encoder_outputs,
                                                              function, teacher_forcing_ratio)
@@ -96,8 +134,10 @@ class DecoderRNN(BaseRNN):
 
         if use_teacher_forcing:
             decoder_input = inputs[:, :-1]
-            decoder_output, decoder_hidden, attn = self.forward_step(decoder_input, decoder_hidden, encoder_outputs,
-                                                                     function=function)
+            if self.use_attention is "Bahdanau":
+                decoder_output, decoder_hidden, attn = self.forward_step_BahdanauAtt(decoder_input, decoder_hidden, encoder_outputs, function=function)
+            else:
+                decoder_output, decoder_hidden, attn = self.forward_step(decoder_input, decoder_hidden, encoder_outputs, function=function)
 
             for di in range(decoder_output.size(1)):
                 step_output = decoder_output[:, di, :]
@@ -109,8 +149,10 @@ class DecoderRNN(BaseRNN):
         else:
             decoder_input = inputs[:, 0].unsqueeze(1)
             for di in range(max_length):
-                decoder_output, decoder_hidden, step_attn = self.forward_step(decoder_input, decoder_hidden, encoder_outputs,
-                                                                         function=function)
+                if self.use_attention is "Bahdanau":
+                    decoder_output, decoder_hidden, step_attn = self.forward_step_BahdanauAtt(decoder_input, decoder_hidden, encoder_outputs, function=function)
+                else:
+                    decoder_output, decoder_hidden, step_attn = self.forward_step(decoder_input, decoder_hidden, encoder_outputs, function=function)
                 step_output = decoder_output.squeeze(1)
                 symbols = decode(di, step_output, step_attn)
                 decoder_input = symbols

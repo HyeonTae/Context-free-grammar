@@ -17,8 +17,9 @@ import matplotlib.pyplot as plt
 class SupervisedTrainer(object):
     def __init__(self, loss=NLLLoss(), batch_size=64,
                  random_seed=None,
-                 checkpoint_every=100, print_every=100, hidden_size=50):
+                 checkpoint_every=100, print_every=100, hidden_size=50, fig_path="log"):
         self.hidden_size = hidden_size
+        self.fig_path = fig_path
         self._trainer = "Simple Trainer"
         self.random_seed = random_seed
         if random_seed is not None:
@@ -78,6 +79,7 @@ class SupervisedTrainer(object):
         step_elapsed = 0
         epoch_list = []
         losses = []
+        character_accuracy_list = []
         for epoch in range(start_epoch, n_epochs + 1):
             epoch_list.append(epoch)
             log.debug("Epoch: %d, Step: %d" % (epoch, step))
@@ -135,14 +137,29 @@ class SupervisedTrainer(object):
             else:
                 self.optimizer.update(epoch_loss_avg, epoch)
 
+            character_accuracy_list.append(character_accuracy)
             log.info(log_msg)
 
-        title = "epoch_to_loss(" + str(self.hidden_size) + ")"
+        if not os.path.isdir(self.fig_path):
+            os.mkdir(self.fig_path)
+
+        plt.figure(1)
+        title = "epoch_to_loss" + str(self.hidden_size)
+        save_path = self.fig_path + "/" + title
         plt.plot(epoch_list, losses)
         plt.xlabel('epoch')
         plt.ylabel('loss')
         plt.title(title)
-        plt.savefig(title + '.png')
+        plt.savefig(save_path + '.png')
+
+        plt.figure(2)
+        title = "epoch_to_accuracy_" + str(self.hidden_size)
+        save_path = self.fig_path + "/" + title
+        plt.plot(epoch_list, character_accuracy_list)
+        plt.xlabel('epoch')
+        plt.ylabel('accuracy')
+        plt.title(title)
+        plt.savefig(save_path + '.png')
 
         #plt.plot(epoch_list, losses)
         #plt.savefig('epoch_to_loss.png')
