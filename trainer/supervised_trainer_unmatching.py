@@ -14,12 +14,13 @@ from optim.optim import Optimizer
 
 import matplotlib.pyplot as plt
 
-class SupervisedTrainer(object):
+class SupervisedTrainer_unmatching(object):
     def __init__(self, loss=NLLLoss(), batch_size=64,
                  random_seed=None,
-                 checkpoint_every=100, print_every=100, hidden_size=50, fig_path="log"):
+                 checkpoint_every=100, print_every=100, hidden_size=50, path="test"):
         self.hidden_size = hidden_size
-        self.fig_path = fig_path
+        self.fig_path = "log/plot/" + path
+        self.check_path = "log/check_point/" + path
         self._trainer = "Simple Trainer"
         self.random_seed = random_seed
         if random_seed is not None:
@@ -80,7 +81,11 @@ class SupervisedTrainer(object):
         epoch_list = []
         losses = []
         character_accuracy_list = []
+        sentance_accuracy_list = []
         f1_score_list = []
+        best_character_accuracy = 0
+        best_sentance_accuracy = 0
+        best_f1_score = 0
         for epoch in range(start_epoch, n_epochs + 1):
             epoch_list.append(epoch)
             log.debug("Epoch: %d, Step: %d" % (epoch, step))
@@ -131,50 +136,77 @@ class SupervisedTrainer(object):
             log_msg = "Finished epoch %d: Train %s: %.4f" % (epoch, self.loss.name, epoch_loss_avg)
             losses.append(epoch_loss_avg)
             if dev_data is not None:
-                dev_loss, character_accuracy, word_accuracy, f1_score = self.evaluator.evaluate(model, dev_data)
+                dev_loss, character_accuracy, sentance_accuracy, f1_score = self.evaluator.evaluate(model, dev_data)
                 self.optimizer.update(dev_loss, epoch)
-                log_msg += ", Dev %s: %.4f, Accuracy: %.4f, F1 Score: %.4f" % (self.loss.name, dev_loss, character_accuracy, f1_score)
+                log_msg += ", Dev %s: %.4f, Accuracy(character): %.4f, Accuracy(sentance): %.4f, F1 Score: %.4f" % (self.loss.name, dev_loss, character_accuracy, sentance_accuracy, f1_score)
                 model.train(mode=True)
             else:
                 self.optimizer.update(epoch_loss_avg, epoch)
 
             character_accuracy_list.append(character_accuracy)
+            sentance_accuracy_list.append(sentance_accuracy)
             f1_score_list.append(f1_score)
             log.info(log_msg)
+
+            if best_character_accuracy < character_accuracy:
+                best_character_accuracy = character_accuracy
+            if best_sentance_accuracy < sentance_accuracy:
+                best_sentance_accuracy = sentance_accuracy
+            if best_f1_score < f1_score:
+                best_f1_score = f1_score
+
+            if not os.path.isdir(self.check_path):
+                os.mkdir(self.check_path)
+
+            with open(self.check_path + "/epoch" + str(epoch), 'w') as f:
+                f.write("Best Character Accuracy:%0.4f, Best Sentance Accuracy:%0.4f, Best F1 Score:%0.4f" % (best_character_accuracy, best_sentance_accuracy, best_f1_score))
 
         if not os.path.isdir(self.fig_path):
             os.mkdir(self.fig_path)
 
-        plt.figure(1)
-        title = "epoch_to_loss_" + str(self.hidden_size)
+        plt.figure(figsize=(15,10))
+        plt.grid(True)
+        title = "epoch_to_loss" + str(self.hidden_size)
         save_path = self.fig_path + "/" + title
-        plt.plot(epoch_list, losses)
-        plt.xlabel('epoch')
-        plt.ylabel('loss')
-        plt.title(title)
+        plt.plot(epoch_list[::3], losses[::3], LineWidth=4)
+        plt.xlabel('epoch', fontsize=24)
+        plt.ylabel('loss', fontsize=24)
+        plt.title(title, fontsize=32, fontweight=560)
         plt.savefig(save_path + '.png')
 
-        plt.figure(2)
-        title = "epoch_to_accuracy_" + str(self.hidden_size)
+        plt.figure(figsize=(15,10))
+        plt.grid(True)
+        title = "epoch_to_character_accuracy_" + str(self.hidden_size)
         save_path = self.fig_path + "/" + title
-        plt.plot(epoch_list, character_accuracy_list)
-        plt.xlabel('epoch')
-        plt.ylabel('accuracy')
-        plt.title(title)
+        plt.plot(epoch_list[::3], character_accuracy_list[::3], LineWidth=4)
+        plt.xlabel('epoch', fontsize=24)
+        plt.ylabel('character accuracy', fontsize=24)
+        plt.title(title, fontsize=32, fontweight=560)
         plt.savefig(save_path + '.png')
 
-        plt.figure(3)
+        plt.figure(figsize=(15,10))
+        plt.grid(True)
+        title = "epoch_to_sentance_accuracy_" + str(self.hidden_size)
+        save_path = self.fig_path + "/" + title
+        plt.plot(epoch_list[::3], sentance_accuracy_list[::3], LineWidth=4)
+        plt.xlabel('epoch', fontsize=24)
+        plt.ylabel('sentance accuracy', fontsize=24)
+        plt.title(title, fontsize=32, fontweight=560)
+        plt.savefig(save_path + '.png')
+
+        plt.figure(figsize=(15,10))
+        plt.grid(True)
         title = "epoch_to_f1_score_" + str(self.hidden_size)
         save_path = self.fig_path + "/" + title
-        plt.plot(epoch_list, f1_score_list)
-        plt.xlabel('epoch')
-        plt.ylabel('f1_score')
-        plt.title(title)
+        plt.plot(epoch_list[::3], f1_score_list[::3], LineWidth=4)
+        plt.xlabel('epoch', fontsize=24)
+        plt.ylabel('f1_score', fontsize=24)
+        plt.title(title, fontsize=32, fontweight=560)
         plt.savefig(save_path + '.png')
 
         #plt.plot(epoch_list, losses)
         #plt.savefig('epoch_to_loss.png')
-        return epoch_loss_avg, character_accuracy
+        return epoch_loss_avg, character_accuracy_list, sentance_accuracy_list, f1_score_list
 
     def train(self, model, data, num_epochs=5,
               resume=False, dev_data=None,
@@ -206,7 +238,7 @@ class SupervisedTrainer(object):
 
         self.logger.info("Optimizer: %s, Scheduler: %s" % (self.optimizer.optimizer, self.optimizer.scheduler))
 
-        loss, character_accuracy = self._train_epoches(data, model, num_epochs,
+        loss, character_accuracy, sentance_accuracy, f1_score = self._train_epoches(data, model, num_epochs,
                                     start_epoch, step, dev_data=dev_data,
                                     teacher_forcing_ratio=teacher_forcing_ratio)
-        return model, loss, character_accuracy
+        return model, loss, character_accuracy, sentance_accuracy, f1_score

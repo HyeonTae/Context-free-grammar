@@ -3,6 +3,7 @@ from __future__ import print_function, division
 import os
 import torch
 import torchtext
+import itertools
 
 from loss.loss import NLLLoss
 
@@ -18,10 +19,10 @@ class Evaluator(object):
         loss.reset()
         match = 0
         total = 0
-        word_total = 0
-        word_match = 0
-        match_w = 0
-        total_w = 0
+
+        match_sentance = 0
+        total_lengths = 0
+
         condition_positive = 0
         prediction_positive = 0
         true_positive = 0
@@ -41,7 +42,7 @@ class Evaluator(object):
                 input_variables, input_lengths  = getattr(batch, 'src')
                 target_variables = getattr(batch, 'tgt')
                 decoder_outputs, decoder_hidden, other = model(input_variables, input_lengths.tolist(), target_variables)
-
+                correct_list = []
                 # Evaluation
                 seqlist = other['sequence']
                 for step, step_output in enumerate(decoder_outputs):
@@ -50,32 +51,34 @@ class Evaluator(object):
 
                     non_padding = target.ne(pad)
                     correct = seqlist[step].view(-1).eq(target).masked_select(non_padding).sum().item()
+                    correct_list.append(seqlist[step].view(-1).eq(target).masked_select(non_padding).tolist())
 
                     CP = target.ne(2).masked_select(non_padding)
                     PP = seqlist[step].view(-1).ne(2).masked_select(non_padding)
                     TP = target.eq(2).masked_select(non_padding).add(1).eq(PP)
-                    match_w += correct
-                    total_w += non_padding.sum().item()
+                    match += correct
+                    total += non_padding.sum().item()
 
-                    if(match_w == total_w):
-                        word_match += 1
-
-                    match += match_w
-                    total += total_w
-                    word_total += 1
                     condition_positive += CP.sum().item()
                     prediction_positive += PP.sum().item()
                     true_positive += TP.sum().item()
 
+                q = list(itertools.zip_longest(*correct_list))
+                for i in q:
+                    check_sentance = False
+                    for j in i:
+                        if(j == 0):
+                            check_sentance = True
+                    if(check_sentance == False):
+                        match_sentance += 1
+                total_lengths += len(input_lengths)
+
         if total == 0:
             character_accuracy = 0
+            sentance_accuracy = 0
         else:
             character_accuracy = match / total
-
-        if word_total == 0:
-            word_accuracy = 0
-        else:
-            word_accuracy = word_match / word_total
+            sentance_accuracy = match_sentance / total_lengths
 
         if condition_positive == 0:
             recall = 0
@@ -87,9 +90,9 @@ class Evaluator(object):
         else:
             precision = true_positive / prediction_positive
 
-        if condition_positive == 0 and prediction_positive == 0:
+        if precision == 0 and recall == 0:
             f1_score = 0
         else:
             f1_score = 2.0 * ((precision * recall) / (precision + recall))
 
-        return loss.get_loss(), character_accuracy, word_accuracy, f1_score
+        return loss.get_loss(), character_accuracy, sentance_accuracy, f1_score

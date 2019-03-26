@@ -17,9 +17,10 @@ import matplotlib.pyplot as plt
 class SupervisedTrainer(object):
     def __init__(self, loss=NLLLoss(), batch_size=64,
                  random_seed=None,
-                 checkpoint_every=100, print_every=100, hidden_size=50, fig_path="log"):
+                 checkpoint_every=100, print_every=100, hidden_size=50, path="test"):
         self.hidden_size = hidden_size
-        self.fig_path = fig_path
+        self.fig_path = "log/plot/" + path
+        self.check_path = "log/check_point/" + path
         self._trainer = "Simple Trainer"
         self.random_seed = random_seed
         if random_seed is not None:
@@ -80,6 +81,9 @@ class SupervisedTrainer(object):
         epoch_list = []
         losses = []
         character_accuracy_list = []
+        sentance_accuracy_list = []
+        best_character_accuracy = 0
+        best_sentance_accuracy = 0
         for epoch in range(start_epoch, n_epochs + 1):
             epoch_list.append(epoch)
             log.debug("Epoch: %d, Step: %d" % (epoch, step))
@@ -130,40 +134,62 @@ class SupervisedTrainer(object):
             log_msg = "Finished epoch %d: Train %s: %.4f" % (epoch, self.loss.name, epoch_loss_avg)
             losses.append(epoch_loss_avg)
             if dev_data is not None:
-                dev_loss, character_accuracy, word_accuracy = self.evaluator.evaluate(model, dev_data)
+                dev_loss, character_accuracy, sentance_accuracy = self.evaluator.evaluate(model, dev_data)
                 self.optimizer.update(dev_loss, epoch)
-                log_msg += ", Dev %s: %.4f, Accuracy(Character): %.4f, Accuracy(Word): %.4f" % (self.loss.name, dev_loss, character_accuracy, word_accuracy)
+                log_msg += ", Dev %s: %.4f, Accuracy(Character): %.4f, Accuracy(Word): %.4f" % (self.loss.name, dev_loss, character_accuracy, sentance_accuracy)
                 model.train(mode=True)
             else:
                 self.optimizer.update(epoch_loss_avg, epoch)
 
             character_accuracy_list.append(character_accuracy)
+            sentance_accuracy_list.append(sentance_accuracy)
             log.info(log_msg)
+
+            if best_character_accuracy < character_accuracy:
+                best_character_accuracy = character_accuracy
+            if best_sentance_accuracy < sentance_accuracy:
+                best_sentance_accuracy = sentance_accuracy
+
+            if not os.path.isdir(self.check_path):
+                os.mkdir(self.check_path)
+
+            with open(self.check_path + "/epoch" + str(epoch), 'w') as f:
+               f.write("Best Character Accuracy:%0.4f, Best Sentance Accuracy:%0.4f" % (best_character_accuracy, best_sentance_accuracy))
 
         if not os.path.isdir(self.fig_path):
             os.mkdir(self.fig_path)
 
-        plt.figure(1)
+        plt.figure(figsize=(15,10))
+        plt.grid(True)
         title = "epoch_to_loss" + str(self.hidden_size)
         save_path = self.fig_path + "/" + title
-        plt.plot(epoch_list, losses)
-        plt.xlabel('epoch')
-        plt.ylabel('loss')
-        plt.title(title)
+        plt.plot(epoch_list[::3], losses[::3], LineWidth=4)
+        plt.xlabel('Epoch', fontsize=24)
+        plt.ylabel('Loss', fontsize=24)
+        plt.title(title, fontsize=32, fontweight=560)
         plt.savefig(save_path + '.png')
 
-        plt.figure(2)
-        title = "epoch_to_accuracy_" + str(self.hidden_size)
+        plt.figure(figsize=(15,10))
+        plt.grid(True)
+        title = "epoch_to_character_accuracy_" + str(self.hidden_size)
         save_path = self.fig_path + "/" + title
-        plt.plot(epoch_list, character_accuracy_list)
-        plt.xlabel('epoch')
-        plt.ylabel('accuracy')
-        plt.title(title)
+        plt.plot(epoch_list[::3], character_accuracy_list[::3], LineWidth=4)
+        plt.xlabel('Epoch', fontsize=24)
+        plt.ylabel('Character Accuracy', fontsize=24)
+        plt.title(title, fontsize=32, fontweight=560)
         plt.savefig(save_path + '.png')
 
-        #plt.plot(epoch_list, losses)
-        #plt.savefig('epoch_to_loss.png')
-        return epoch_loss_avg, character_accuracy
+        plt.figure(figsize=(15,10))
+        plt.grid(True)
+        title = "epoch_to_sentance_accuracy_" + str(self.hidden_size)
+        save_path = self.fig_path + "/" + title
+        plt.plot(epoch_list[::3], sentance_accuracy_list[::3], LineWidth=4)
+        plt.xlabel('Epoch', fontsize=24)
+        plt.ylabel('Sentance Accuracy', fontsize=24)
+        plt.title(title, fontsize=32, fontweight=560)
+        plt.savefig(save_path + '.png')
+
+        return epoch_loss_avg, character_accuracy_list, sentance_accuracy_list
 
     def train(self, model, data, num_epochs=5,
               resume=False, dev_data=None,
@@ -190,12 +216,12 @@ class SupervisedTrainer(object):
         start_epoch = 1
         step = 0
         if optimizer is "Adam":
-            optimizer = Optimizer(optim.Adam(model.parameters()), max_grad_norm=0.5)
+            optimizer = Optimizer(optim.Adam(model.parameters(), lr = 0.0001), max_grad_norm=5)
         self.optimizer = optimizer
 
         self.logger.info("Optimizer: %s, Scheduler: %s" % (self.optimizer.optimizer, self.optimizer.scheduler))
 
-        loss, character_accuracy = self._train_epoches(data, model, num_epochs,
-                                    start_epoch, step, dev_data=dev_data,
-                                    teacher_forcing_ratio=teacher_forcing_ratio)
-        return model, loss, character_accuracy
+        loss, character_accuracy_list, sentance_accuracy_list = self._train_epoches(data, model, num_epochs,
+                                                                start_epoch, step, dev_data=dev_data,
+                                                                teacher_forcing_ratio=teacher_forcing_ratio)
+        return model, loss, character_accuracy_list, sentance_accuracy_list

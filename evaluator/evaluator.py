@@ -3,6 +3,7 @@ from __future__ import print_function, division
 import os
 import torch
 import torchtext
+import itertools
 
 from loss.loss import NLLLoss
 
@@ -18,10 +19,9 @@ class Evaluator(object):
         loss.reset()
         match = 0
         total = 0
-        word_total = 0
-        word_match = 0
-        match_w = 0
-        total_w = 0
+
+        match_sentance = 0
+        total_lengths = 0
 
         #device = None if torch.cuda.is_available() else -1
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -38,7 +38,7 @@ class Evaluator(object):
                 target_variables = getattr(batch, 'tgt')
 
                 decoder_outputs, decoder_hidden, other = model(input_variables, input_lengths.tolist(), target_variables)
-
+                correct_list = []
                 # Evaluation
                 seqlist = other['sequence']
                 for step, step_output in enumerate(decoder_outputs):
@@ -47,21 +47,25 @@ class Evaluator(object):
 
                     non_padding = target.ne(pad)
                     correct = seqlist[step].view(-1).eq(target).masked_select(non_padding).sum().item()
-                    match_w += correct
-                    total_w += non_padding.sum().item()
+                    correct_list.append(seqlist[step].view(-1).eq(target).masked_select(non_padding).tolist())
+                    match += correct
+                    total += non_padding.sum().item()
 
-                    if(match_w == total_w):
-                        word_match += 1
-
-                    match += match_w
-                    total += total_w
-                    word_total += 1
+                q = list(itertools.zip_longest(*correct_list))
+                for i in q:
+                    check_sentance = False
+                    for j in i:
+                        if(j == 0):
+                            check_sentance = True
+                    if(check_sentance == False):
+                        match_sentance += 1
+                total_lengths += len(input_lengths)
 
         if total == 0:
             character_accuracy = float('nan')
-            word_accuracy = float('nan')
+            sentance_accuracy = float('nan')
         else:
             character_accuracy = match / total
-            word_accuracy = word_match / word_total
+            sentance_accuracy = match_sentance / total_lengths
 
-        return loss.get_loss(), character_accuracy, word_accuracy
+        return loss.get_loss(), character_accuracy, sentance_accuracy

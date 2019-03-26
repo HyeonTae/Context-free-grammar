@@ -24,6 +24,7 @@ class DecoderRNN(BaseRNN):
     KEY_ATTN_SCORE = 'attention_score'
     KEY_LENGTH = 'length'
     KEY_SEQUENCE = 'sequence'
+    KEY_ENCODER_OUTPUTS = 'encoder_outputs'
 
     def __init__(self, vocab_size, max_len, hidden_size,
             sos_id, eos_id,
@@ -99,6 +100,7 @@ class DecoderRNN(BaseRNN):
     def forward(self, inputs=None, encoder_hidden=None, encoder_outputs=None,
                     function=F.log_softmax, teacher_forcing_ratio=0):
         ret_dict = dict()
+        ret_dict[DecoderRNN.KEY_ENCODER_OUTPUTS] = encoder_outputs.squeeze(0)
         if self.use_attention:
             ret_dict[DecoderRNN.KEY_ATTN_SCORE] = list()
 

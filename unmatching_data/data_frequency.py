@@ -1,4 +1,4 @@
-lines = open('grammar_unmatching_data_N50.txt').read().strip().split('\n')
+lines = open('grammar_unmatching_data_N100.txt').read().strip().split('\n')
 pairs = [[s for s in l.split('\t')] for l in lines]
 depths = []
 unmatching = 0

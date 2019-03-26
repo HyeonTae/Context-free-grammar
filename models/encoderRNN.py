@@ -32,6 +32,7 @@ class EncoderRNN(BaseRNN):
         output, hidden = self.rnn(embedded)
         if self.variable_lengths:
             output, _ = nn.utils.rnn.pad_packed_sequence(output, batch_first=True)
+
         return output, hidden
     
     

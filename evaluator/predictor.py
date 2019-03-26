@@ -1,6 +1,8 @@
 import torch
 from torch.autograd import Variable
 
+from sklearn.decomposition import PCA
+
 
 class Predictor(object):
 
@@ -28,9 +30,18 @@ class Predictor(object):
 
         length = other['length'][0]
 
+        tgt_att_list = []
+        encoder_outputs = []
+        #principalComponents = []
         tgt_id_seq = [other['sequence'][di][0].data[0] for di in range(length)]
+        if 'attention_score' in list(other.keys()):
+            tgt_att_list = [other['attention_score'][di][0].data[0].cpu().numpy() for di in range(length)]
+            encoder_outputs = other['encoder_outputs'].cpu().numpy()
+            #pca = PCA(n_components=2)
+            #principalComponents = pca.fit_transform(encoder_outputs)
+
         tgt_seq = [self.tgt_vocab.itos[tok] for tok in tgt_id_seq]
-        return tgt_seq
+        return tgt_seq, tgt_att_list, encoder_outputs
 
     def predict_n(self, src_seq, n=1):
         other = self.get_decoder_features(src_seq)
