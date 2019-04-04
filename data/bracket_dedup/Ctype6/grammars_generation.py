@@ -85,8 +85,8 @@ def main():
     while(True):
         rb = random.uniform(0.6, 0.8)
         rc = random.uniform(0.3, 0.6)
-        printProgress(len(brackets_list), 10000, 'Progress', 'Complete')
-        if(len(brackets_list) >= 10000):
+        printProgress(len(brackets_list), 100000, 'Progress', 'Complete')
+        if(len(brackets_list) >= 100000):
             break
         result = "*S"
         sequence = []

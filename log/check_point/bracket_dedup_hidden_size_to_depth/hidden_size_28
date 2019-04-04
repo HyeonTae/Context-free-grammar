@@ -1,0 +1,5 @@
+Depth:32, Dev Loss:4.4232, Character Accuracy:0.7421, Sentence Accuracy:0.0000
+Depth:31, Dev Loss:1.3661, Character Accuracy:0.9194, Sentence Accuracy:0.0000
+Depth:30, Dev Loss:1.3481, Character Accuracy:0.9078, Sentence Accuracy:0.0000
+Depth:29, Dev Loss:1.2038, Character Accuracy:0.9496, Sentence Accuracy:0.1875
+Depth:28, Dev Loss:1.0672, Character Accuracy:0.9858, Sentence Accuracy:0.6667

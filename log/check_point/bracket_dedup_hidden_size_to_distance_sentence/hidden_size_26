@@ -1,0 +1,13 @@
+Distance:96, Dev Loss:1.1418, Character Accuracy:0.9521, Sentence Accuracy:0.0705
+Distance:94, Dev Loss:1.1286, Character Accuracy:0.9577, Sentence Accuracy:0.0996
+Distance:92, Dev Loss:1.0856, Character Accuracy:0.9714, Sentence Accuracy:0.2823
+Distance:90, Dev Loss:1.0747, Character Accuracy:0.9753, Sentence Accuracy:0.3218
+Distance:88, Dev Loss:1.0448, Character Accuracy:0.9846, Sentence Accuracy:0.5191
+Distance:86, Dev Loss:1.0397, Character Accuracy:0.9867, Sentence Accuracy:0.5411
+Distance:84, Dev Loss:1.0242, Character Accuracy:0.9919, Sentence Accuracy:0.6593
+Distance:82, Dev Loss:1.0212, Character Accuracy:0.9929, Sentence Accuracy:0.7000
+Distance:80, Dev Loss:1.0108, Character Accuracy:0.9965, Sentence Accuracy:0.8402
+Distance:78, Dev Loss:1.0099, Character Accuracy:0.9968, Sentence Accuracy:0.8531
+Distance:76, Dev Loss:1.0056, Character Accuracy:0.9982, Sentence Accuracy:0.9184
+Distance:74, Dev Loss:1.0049, Character Accuracy:0.9986, Sentence Accuracy:0.9315
+Distance:72, Dev Loss:1.0028, Character Accuracy:0.9992, Sentence Accuracy:0.9648

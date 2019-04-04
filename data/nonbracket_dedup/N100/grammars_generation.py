@@ -60,7 +60,7 @@ def nonbracket():
         return 'c'
 
 def insert_nonbracket(brackets, lenth):
-    iterator = int(random.uniform(1, lenth - 1))
+    iterator = int(random.uniform(1, lenth - 1 if lenth <= 10 else 10))
     for i in range(0, iterator):
         index = int(random.uniform(1, lenth))
         brackets = brackets[:index] + nonbracket() + brackets[index:]
@@ -85,8 +85,8 @@ def main():
     while(True):
         rb = random.uniform(0.6, 0.8)
         rc = random.uniform(0.3, 0.6)
-        printProgress(len(brackets_list), 10000, 'Progress', 'Complete')
-        if(len(brackets_list) >= 10000):
+        printProgress(len(brackets_list), 100000, 'Progress', 'Complete')
+        if(len(brackets_list) >= 100000):
             break
         result = "*S"
         sequence = []

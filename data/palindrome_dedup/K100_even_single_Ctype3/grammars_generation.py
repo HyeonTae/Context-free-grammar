@@ -1,6 +1,8 @@
 import random
 import numpy as np
 import sys
+import math
+
 N = 100
 rb = 1
 rc = 1
@@ -16,39 +18,35 @@ def Pb(l):
 def Ps1():
     return np.random.choice(3, 1, p=[0.333, 0.333, 1-0.666])
 
-def S(words, label):
+def S(words):
     l = len(words.replace("S", ""))
 
     if(Pb(l) == 0):
-        return S1(words, label)
+        return S1(words)
     else:
-        return S2(words, label)
+        return S2(words)
 
-def S1(words, label):
+def S1(words):
     ps1=Ps1()
     if(Ps1() == 0):
-        words = words.replace("S", "aSa", 1)
+        words = words.replace("S", "aSd", 1)
     elif(ps1 == 1):
-        words = words.replace("S", "bSb", 1)
+        words = words.replace("S", "bSe", 1)
     elif(ps1 == 2):
-        words = words.replace("S", "cSc", 1)
+        words = words.replace("S", "cSf", 1)
 
-    label = label.replace("S", "1S0", 1)
-    return S(words, label)
+    return S(words)
 
-def S2(words, label):
+def S2(words):
     ps1=Ps1()
     if(ps1 == 0):
-        words = words.replace("S", "aa", 1)
-        label = label.replace("S", "10", 1)
+        words = words.replace("S", "ad", 1)
     elif(ps1 == 1):
-        words = words.replace("S", "bb", 1)
-        label = label.replace("S", "10", 1)
+        words = words.replace("S", "be", 1)
     elif(ps1 == 2):
-        words = words.replace("S", "cc", 1)
-        label = label.replace("S", "10", 1)
+        words = words.replace("S", "cf", 1)
 
-    return words, label
+    return words
 
 def printProgress (iteration, total, prefix = '', suffix = '', decimals = 1, barLength = 50):
     formatStr = "{0:." + str(decimals) + "f}"
@@ -60,6 +58,20 @@ def printProgress (iteration, total, prefix = '', suffix = '', decimals = 1, bar
         sys.stdout.write('\n')
     sys.stdout.flush()
 
+def answer_function(data):
+    result = []
+    num = 0
+    m = int(len(data)/2)
+    for i in range(m):
+        num += 1
+        result.append(str(num))
+    #result.append(str(num))
+    for i in range(m):
+        num -= 1
+        result.append(str(num))
+
+    return " ".join(result)
+
 def main():
     global rb
     global rc
@@ -67,32 +79,22 @@ def main():
     f = open("grammar_data.txt", 'w')
     brackets_list = []
     while(True):
-        rb = random.uniform(0.9, 0.95)
+        rb = random.uniform(0.9, 0.99)
         printProgress(len(brackets_list), 100000, 'Progress', 'Complete')
         if(len(brackets_list) >= 100000):
             break
         result = "S"
-        label = "S"
-        labels = []
         num = 0
 
-        result, label= S(result, label)
+        result = S(result)
 
         if result not in brackets_list:
             brackets_list.append(result)
             result = result[:len(result) if len(result) <= N else N]
-            label = label[:len(label) if len(label) <= N else N]
-            for i in label:
-                if(i == "1"):
-                    num = num + 1
-                    labels.append(str(num))
-                elif(i == "0"):
-                    num = num - 1
-                    labels.append(str(num))
-                else:
-                    labels.append(str(num))
+            label = answer_function(result)
+            result = result[:math.ceil(len(result)/2)]  + result[math.ceil(len(result)/2):]
                  
-            f.write("%s\t%s\n" % (" ".join(result), " ".join(labels)))
+            f.write("%s\t%s\n" % (" ".join(result), label))
 
         else:
             continue

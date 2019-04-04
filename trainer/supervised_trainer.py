@@ -19,8 +19,8 @@ class SupervisedTrainer(object):
                  random_seed=None,
                  checkpoint_every=100, print_every=100, hidden_size=50, path="test"):
         self.hidden_size = hidden_size
-        self.fig_path = "log/plot/" + path
-        self.check_path = "log/check_point/" + path
+        self.fig_path = "../../../log/plot/" + path
+        self.check_path = "../../../log/check_point/" + path
         self._trainer = "Simple Trainer"
         self.random_seed = random_seed
         if random_seed is not None:
@@ -216,7 +216,7 @@ class SupervisedTrainer(object):
         start_epoch = 1
         step = 0
         if optimizer is "Adam":
-            optimizer = Optimizer(optim.Adam(model.parameters(), lr = 0.0001), max_grad_norm=5)
+            optimizer = Optimizer(optim.Adam(model.parameters()), max_grad_norm=5)
         self.optimizer = optimizer
 
         self.logger.info("Optimizer: %s, Scheduler: %s" % (self.optimizer.optimizer, self.optimizer.scheduler))

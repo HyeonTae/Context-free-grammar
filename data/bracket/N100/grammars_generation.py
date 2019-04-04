@@ -1,13 +1,16 @@
 import random
 import numpy as np
 import sys
+import math
+
 N = 100
 rb = 1
 rc = 1
 
 def s(l):
     global N
-    return min(1, -1 * l / N + 1 if l <= N else 0.0)
+    #return 1
+    return min(1, -10 * l / N + 10 if l <= N else 0.0)
  
 def Pb(l):
     global rb
@@ -65,10 +68,10 @@ def main():
     global rc
     global N
     f = open("grammar_data.txt", 'w')
-    iterator = 10000
+    iterator = 100000
     for i in range(0,iterator):
-        rb = random.uniform(0.7, 0.9)
-        rc = random.uniform(0.4, 0.8)
+        rb = random.uniform(0.8, 0.9)
+        rc = random.uniform(0.1, 0.2)
         printProgress(i, iterator, 'Progress', 'Complete')
         result = "*S"
         sequence = []
@@ -81,14 +84,14 @@ def main():
                 point = result.find('*S1')
                 result = S1(result)
                 if(result.find('S', point + 1) != -1):
-                    result = result.replace(result[result.find('S', point + 1)], "*S", 1)
+                    result = result[:result.find('S', point + 1)] + "*" + result[result.find('S', point + 1):]
                 else:
                     result = result.replace("S", "*S", 1)
             elif "*S" in result:
                 point = result.find('*S')
                 result = S(result)
                 if(result.find('S', point + 2) != -1):
-                    result = result.replace(result[result.find('S', point + 1)], "*S", 1)
+                    result = result[:result.find('S', point + 1)] + "*" + result[result.find('S', point + 1):]
                 else:
                     result = result.replace("S", "*S", 1)
 
