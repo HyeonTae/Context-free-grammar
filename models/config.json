@@ -1,0 +1,18 @@
+{
+    "max_len": 102,
+    "embedding_size": 5,
+    "hidden_size": 200,
+    "input_dropout_p": 0,
+    "dropout_p": 0,
+    "n_layers": 1,
+    "bidirectional": false,
+    "rnn_cell": "lstm",
+    "variable_lengths": false,
+    "embedding": null,
+    "update_embedding": true,
+    "get_context_vector": false,
+    "use_attention": true,
+    "attn_layers": 1,
+    "hard_attn": false,
+    "position_embedding": null
+}

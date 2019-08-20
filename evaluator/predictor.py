@@ -1,9 +1,6 @@
 import torch
 from torch.autograd import Variable
 
-from sklearn.decomposition import PCA
-
-
 class Predictor(object):
 
     def __init__(self, model, src_vocab, tgt_vocab):
@@ -21,7 +18,7 @@ class Predictor(object):
             src_id_seq = src_id_seq.cuda()
 
         with torch.no_grad():
-            softmax_list, _, other = self.model(src_id_seq, [len(src_seq)])
+            softmax_list, _, other = self.model(src_id_seq, [len(src_seq)], target_lengths=[len(src_seq)+2])
 
         return other
 
@@ -32,16 +29,19 @@ class Predictor(object):
 
         tgt_att_list = []
         encoder_outputs = []
-        #principalComponents = []
         tgt_id_seq = [other['sequence'][di][0].data[0] for di in range(length)]
         if 'attention_score' in list(other.keys()):
-            tgt_att_list = [other['attention_score'][di][0].data[0].cpu().numpy() for di in range(length)]
+            for i in range(len(other['attention_score'][0][0])):
+                tgt_att_list.append([other['attention_score'][di][0].data[i].cpu().numpy() for di in range(length)])
             encoder_outputs = other['encoder_outputs'].cpu().numpy()
-            #pca = PCA(n_components=2)
-            #principalComponents = pca.fit_transform(encoder_outputs)
+
+        if other['encoder_context'] is not None:
+            encoder_context = other['encoder_context'].cpu().numpy()
+        else:
+            encoder_context = None
 
         tgt_seq = [self.tgt_vocab.itos[tok] for tok in tgt_id_seq]
-        return tgt_seq, tgt_att_list, encoder_outputs
+        return tgt_seq, tgt_att_list, encoder_outputs, encoder_context
 
     def predict_n(self, src_seq, n=1):
         other = self.get_decoder_features(src_seq)
